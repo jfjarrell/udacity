@@ -4,16 +4,13 @@
 import dateutil.parser
 import babel
 from flask import (
-    Flask,
     render_template,
     request,
     flash,
     redirect,
     url_for
 )
-from flask_moment import Moment
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
+
 import logging
 from logging import Formatter, FileHandler
 
@@ -48,7 +45,6 @@ def format_datetime(value, format='medium'):
       return babel.dates.format_datetime(date, format)
 
 app.jinja_env.filters['datetime'] = format_datetime
-
 
 #----------------------------------------------------------------------------#
 # Controllers.
@@ -163,47 +159,25 @@ def create_venue_form():
 @app.route('/venues/create', methods=['POST'])
 def create_venue_submission():
 
-  # error = False
-  #
-  # try:
-  #   name = request.form.get('name')
-  #   city = request.form.get('city')
-  #   state = request.form.get('state')
-  #   address = request.form.get('address')
-  #   phone = request.form.get('phone')
-  #   genres = request.form.getlist('genres')
-  #   facebook_link = request.form.get('facebook_link')
-  #   venue = Venue(name=name, city=city, state=state, address=address, phone=phone, genres=genres, facebook_link=facebook_link)
-  #   db.session.add(venue)
-  # except():
-  #   db.session.rollback()
-  #   error = True
-  #   print(sys.exc_info())
-  # finally:
-  #   db.session.commit()
-  #   db.session.close()
-  # if error:
-  #   abort(500)
-  #   flash('An error occurred. Venue ' + name + ' could not be listed.')
-    # if error flash error message
-  # else:
-  #   flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    # on successful db insert, flash success
-  form = VenueForm(request.form)
-  try:
-      venue = Venue()
-      form.populate_obj(venue)
-      db.session.add(venue)
-      db.session.commit()
-      flash('Venue ' + request.form['name'] + ' was successfully listed!')
-  except ValueError as e:
-      print(e)
-      flash('An error occurred. ' + request.form['name'] + ' could not be listed.')
-      db.session.rollback()
-  finally:
-      db.session.close()
+  form = VenueForm(request.form, meta={"csrf": False})
+  if form.validate_on_submit():
+      try:
+          venue = Venue()
+          form.populate_obj(venue)
+          db.session.add(venue)
+          db.session.commit()
+          flash('Venue ' + request.form['name'] + ' was successfully listed!')
+      except ValueError as e:
+          print(e)
+          flash('An error occurred. ' + request.form['name'] + ' could not be listed.')
+          db.session.rollback()
+      finally:
+          db.session.close()
+  else:
+      for error in form.errors:
+          flash(error + ' Please correct errors and re-submit.')
 
-  return render_template('pages/home.html')
+  return render_template('pages/home.html', form=form)
 # Create Vendor code changed to use VenueForm and code suggested by Reviewer /reviews/2791179
 
 @app.route('/venues/<venue_id>', methods=['DELETE'])
@@ -346,44 +320,23 @@ def create_artist_form():
 def create_artist_submission():
   # called upon submitting the new artist listing form
 
-  # error = False
-  #
-  # try:
-  #   name = request.form.get('name')
-  #   city = request.form.get('city')
-  #   state = request.form.get('state')
-  #   phone = request.form.get('phone')
-  #   genres = request.form.getlist('genres')
-  #   facebook_link = request.form.get('facebook_link')
-  #   artist = Artist(name=name, city=city, state=state, phone=phone, genres=genres, facebook_link=facebook_link)
-  #   db.session.add(artist)
-  # except():
-  #   db.session.rollback()
-  #   error = True
-  #   print(sys.exc_info())
-  # finally:
-  #   db.session.commit()
-  #   db.session.close()
-  # if error:
-  #   abort(500)
-  #   flash('An error occurred. Artist ' + name + ' could not be listed.')
-  #   # if error flash error message
-  # else:
-  #   flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  #   # on successful db insert, flash success
-  form = ArtistForm(request.form)
-  try:
-      artist = Artist()
-      form.populate_obj(artist)
-      db.session.add(artist)
-      db.session.commit()
-      flash('Artist ' + request.form['name'] + ' was successfully listed!')
-  except ValueError as e:
-      print(e)
-      flash('An error occurred. ' + request.form['name'] + ' could not be listed.')
-      db.session.rollback()
-  finally:
-      db.session.close()
+  form = ArtistForm(request.form, meta={"csrf": False})
+  if form.validate_on_submit():
+      try:
+          artist = Artist()
+          form.populate_obj(artist)
+          db.session.add(artist)
+          db.session.commit()
+          flash('Artist ' + request.form['name'] + ' was successfully listed!')
+      except ValueError as e:
+          print(e)
+          flash('An error occurred. ' + request.form['name'] + ' could not be listed.')
+          db.session.rollback()
+      finally:
+          db.session.close()
+  else:
+      for error in form.errors:
+          flash(error + ' Please correct errors and re-submit.')
   return render_template('pages/home.html')
 # Create Artist code changed to use ArtistForm and code suggested by Reviewer /reviews/2791179
 
